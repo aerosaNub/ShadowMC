@@ -1,0 +1,20 @@
+name: ShadowMC
+main: com.shadowmc.plugin.Main
+version: 1.0
+commands:
+  spawnershop:
+    aliases: [spawners, sshop]
+  protection:
+    aliases: [protect]
+  referral:
+    aliases: [refer, rf, pf]
+  wotd:
+    aliases: [wordoftheday]
+  blockfilter:
+    aliases: [bf, disablepickup, pickup]
+  nightvision:
+    aliases: [nv]
+  tags:
+  mobcoins:
+    aliases: [mcoins]
+  season:
