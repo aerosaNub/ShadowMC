@@ -1,6 +1,7 @@
 package com.shadowmc.plugin;
 
 import com.shadowmc.plugin.commands.*;
+import com.shadowmc.plugin.handlers.files.BCFile;
 import com.shadowmc.plugin.handlers.files.Profile;
 import com.shadowmc.plugin.handlers.files.Config;
 import com.shadowmc.plugin.handlers.files.WordsFile;
@@ -12,6 +13,7 @@ import com.shadowmc.plugin.handlers.objects.Pickup;
 import com.shadowmc.plugin.listeners.*;
 import com.shadowmc.plugin.tabcompleters.StopPluginShow;
 import com.shadowmc.plugin.tasks.MobStackerTask;
+import com.shadowmc.plugin.tasks.runnables.BCRunnable;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
@@ -34,11 +36,23 @@ public class Main extends JavaPlugin
     private TagFile tagFile;
     private TagDatabaseFile tagDatabaseFile;
     private MobCoins mc;
+    private BCFile bcFile;
     private Logger log = Logger.getLogger("Minecraft");
 
     public void onEnable() {
 
         plugin = this;
+
+        load();
+    }
+
+    public void onDisable() {
+        saveData();
+        plugin = null;
+
+    }
+
+    public void load() {
 
         if (!setupEconomy() ) {
             log.severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
@@ -55,7 +69,6 @@ public class Main extends JavaPlugin
             }
         }
 
-        StopPluginShow.stopShowPlugins();
 
         this.tagFile = new TagFile();
         this.tagDatabaseFile = new TagDatabaseFile();
@@ -66,17 +79,19 @@ public class Main extends JavaPlugin
         this.regFile = new Config();
         this.wfile = new WordsFile();
         this.mc = new MobCoins();
+        this.bcFile = new BCFile();
+
+        setupCommands();
+        setupEvents();
+
+
+        StopPluginShow.stopShowPlugins();
         Profile.setFolderPath("plugins/ShadowMC/players");
-        PluginManager pm = Bukkit.getPluginManager();
 
-       // new MobStackerRunnable().runTaskLaterAsynchronously(this, 3 * 20);
+        new BCRunnable().runTaskTimerAsynchronously(this, 2 * 20, 240000L);
+    }
 
-        pm.registerEvents(new PlayerListener(), this);
-        pm.registerEvents(new ChatListener(), this);
-        pm.registerEvents(new ServerListener(), this);
-        pm.registerEvents(new MobStackerListener(), this);
-        pm.registerEvents(new TagInventoryListener(this), this);
-
+    public void setupCommands() {
         getCommand("tags").setExecutor(new TagCommand(this));
         getCommand("spawnershop").setExecutor(new SpawnerShopCommand());
         getCommand("referral").setExecutor(new ReferralCommand());
@@ -88,17 +103,25 @@ public class Main extends JavaPlugin
         getCommand("season").setExecutor(new SeasonCommand());
     }
 
-    public void onDisable() {
+    public void setupEvents() {
+        PluginManager pm = Bukkit.getPluginManager();
 
+
+        pm.registerEvents(new PlayerListener(), this);
+        pm.registerEvents(new ChatListener(), this);
+        pm.registerEvents(new ServerListener(), this);
+        pm.registerEvents(new MobStackerListener(), this);
+        pm.registerEvents(new TagInventoryListener(this), this);
+
+    }
+
+    public void saveData() {
         try {
             this.tagFile.save();
             this.tagDatabaseFile.save();
         } catch (Exception e) {
             System.out.println("Unable to save tag files.");
         }
-
-        plugin = null;
-
     }
 
     private boolean setupEconomy() {
@@ -156,5 +179,9 @@ public class Main extends JavaPlugin
 
     public MobCoins getMc() {
         return mc;
+    }
+
+    public BCFile getBcFile() {
+        return bcFile;
     }
 }
